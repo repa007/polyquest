@@ -12,7 +12,7 @@ def startBot(message):
   markup.add(button_yes)
   botTimeWeb.send_message(message.chat.id, first_mess, parse_mode='html', reply_markup=markup)
 
-#FFFFFFFFFFFFFFFFFFFFFFFFFF
+#FFFFFFFF
 @botTimeWeb.callback_query_handler(func=lambda call:True)
 def response(function_call):
   if function_call.message:
