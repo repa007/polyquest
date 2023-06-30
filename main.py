@@ -12,7 +12,11 @@ def startBot(message):
   markup.add(button_yes)
   botTimeWeb.send_message(message.chat.id, first_mess, parse_mode='html', reply_markup=markup)
 
+<<<<<<< HEAD
 #FFFddddddddddFFFFFFFFFFFFFFFFFFFFFFF
+=======
+#FFFFFFFF
+>>>>>>> 79d88036456f2d1f6e4299d7018f2a8e63dd6719
 @botTimeWeb.callback_query_handler(func=lambda call:True)
 def response(function_call):
   if function_call.message:
