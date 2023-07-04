@@ -47,7 +47,31 @@ def startBot(message):
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
 
 @bot.message_handler(commands=['GetExcel'])
+def GetExcel(message):
+    #import sqlite3
+    #db = sqlite3.connect('yourdatabase.db')
+    #cursor = db.cursor()
+    #cursor.execute('''SELECT * FROM students''')
+    #rows = cursor.fetchall()
+    #db.close()
+    #my_list = [[None for j in range(7)] for i in range(len(rows))]
+    #for i in range(len(rows)):
+       # my_list[i] = list(rows[i])
+   # print(my_list)
 
+    #cols = SELECT COUNT(*) FROM fooTable;
+  cols = 12#считать сколько строк в бд
+  i = 0
+  #rows = 6
+  data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
+          [2, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
+          [3, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
+  #for i in range(cols):
+      #bot.reply_to(message, data[[]])
+  #transpose .T Если перевернуло
+  df = pd.DataFrame(data=data)
+  df.to_excel('Itog.xlsx')
+  bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
 
 @bot.message_handler()#tol'ko vnizu
