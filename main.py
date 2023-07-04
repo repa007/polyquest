@@ -61,7 +61,7 @@ def GetExcel(message):
    # print(my_list)
 
     #cols = SELECT COUNT(*) FROM fooTable;
-  cols = 12#считать сколько строк в бд
+  cols = 12 #считать сколько строк в бд
   i = 0
   #rows = 6
   data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
