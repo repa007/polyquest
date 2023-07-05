@@ -4,9 +4,9 @@ import pandas as pd
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import DB
 #mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#дима
-mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#Локальный
+mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Локальный
 
-bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
+bot = telebot.TeleBot('6254027754:AAGPm1Lf7vHs-3YnbRxTYceejUygDW_45Co')
 from telebot import types
 #hui
 
@@ -75,14 +75,15 @@ def GetExcel(message):
   i = 0
   #rows = 6
 
-  data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [2, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [3, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
+  #data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
+  data,e = mydb.GetAllData()
+  columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname', 'task_id', 'title', 'body', 'task_course',
+               'max']
   #for i in range(cols):
       #bot.reply_to(message, data[[]])
   #transpose .T Если перевернуло
-  df = pd.DataFrame(data=data)
-  df.to_excel('Itog.xlsx')
+  df = pd.DataFrame(data=data, columns=columns)
+  df.to_excel('Itog.xlsx', index=False)
   bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
 
