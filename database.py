@@ -12,8 +12,8 @@ class DB:
             cursorclass=pymysql.cursors.DictCursor
         )
     #Добавить админа
-    def AddAdmin(self,tgname):
-        query = f"INSERT INTO admin (tgname) VALUES('{tgname}')"
+    def AddAdmin(self,chatid):
+        query = f"INSERT INTO admin (chatid) VALUES('{chatid}')"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -22,8 +22,8 @@ class DB:
             return e
     
     #Удалить админа
-    def DeleteAdmin(self,tgname):
-        query = f"DELETE FROM admin WHERE tgname='{tgname}'"
+    def DeleteAdmin(self,chatid):
+        query = f"DELETE FROM admin WHERE chatid='{chatid}'"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -31,9 +31,9 @@ class DB:
         except pymysql.Error as e:
             return e
     
-    #Получить админа по телеграмм id
-    def GetAdminByTgname(self,tgname):
-        query = f"SELECT * FROM admin WHERE tgname='{tgname}'"
+    #Получить админа по chatid
+    def GetAdminByChatid(self,chatid):
+        query = f"SELECT * FROM admin WHERE chatid='{chatid}'"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -93,8 +93,8 @@ class DB:
         
 
     #Добавить студента в базу
-    def AddStudent(self,name,lastname,group,course,tgname):
-        query = f"INSERT INTO students (name, lastname, group_number, course, tgname) VALUES ('{name}','{lastname}','{group}','{course}','{tgname}')"
+    def AddStudent(self,name,lastname,group,course,chatid):
+        query = f"INSERT INTO students (name, lastname, group_number, course, chatid) VALUES ('{name}','{lastname}','{group}','{course}','{chatid}')"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -113,9 +113,9 @@ class DB:
             return e
     
 
-    #Удалить студента по телеграм id
-    def DeleteStudentByTgname(self,tgname):
-        query = f"DELETE FROM students WHERE tgname = {tgname}"
+    #Удалить студента по chatid
+    def DeleteStudentByChatid(self,chatid):
+        query = f"DELETE FROM students WHERE chatid = {chatid}"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -124,9 +124,9 @@ class DB:
             return e
     
 
-    #Получить студента по телеграм id
-    def GetStudentByTgname(self,tgname):
-        query = f"SELECT * FROM students WHERE tgname='{tgname}'"
+    #Получить студента по chatid
+    def GetStudentByChatid(self,chatid):
+        query = f"SELECT * FROM students WHERE chatid='{chatid}'"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -152,11 +152,11 @@ class DB:
             return None, e
     
     #Назначить задание на студента. Если кол-во студентов взявших эту задачу >= max, возвращается ошибка. Курс не учитывается
-    def AssignTask(self,student_tgname,task_id):
+    def AssignTask(self,chatid,task_id):
         query1 = f"SELECT max FROM tasks WHERE id = '{task_id}'"
         query2 = f"SELECT Count(*) as cnt FROM taken WHERE task_id = '{task_id}'"
 
-        query = f"INSERT INTO taken (taken.student_id, taken.task_id) VALUES ((SELECT students.id FROM students WHERE students.tgname = '{student_tgname}'),'{task_id}')"
+        query = f"INSERT INTO taken (taken.student_id, taken.task_id) VALUES ((SELECT students.id FROM students WHERE students.chatid = '{chatid}'),'{task_id}')"
         try:
             with self.conn.cursor() as cursor:
 
@@ -176,8 +176,8 @@ class DB:
     
 
     #Удалить назначение задания
-    def DeleteAssignment(self, student_tgname,task_id):
-        query = f"DELETE FROM taken WHERE (taken.student_id,taken.task_id) = ((SELECT students.id FROM students WHERE students.tgname = '{student_tgname}'),'{task_id}')"
+    def DeleteAssignment(self, chatid,task_id):
+        query = f"DELETE FROM taken WHERE (taken.student_id,taken.task_id) = ((SELECT students.id FROM students WHERE students.chatid = '{chatid}'),'{task_id}')"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -197,8 +197,8 @@ class DB:
             return None, e
     
     #Получить список назначенных заданий студенту
-    def GetMyTasks(self,tgname):
-        query = f"SELECT DISTINCT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks JOIN taken ON taken.task_id = tasks.id WHERE taken.student_id = (SELECT students.id FROM students WHERE students.tgname = '{tgname}')"
+    def GetMyTasks(self,chatid):
+        query = f"SELECT DISTINCT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks JOIN taken ON taken.task_id = tasks.id WHERE taken.student_id = (SELECT students.id FROM students WHERE students.chatid = '{chatid}')"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -208,8 +208,8 @@ class DB:
             return None, e
 
     #Получить список свободных заданий для студента
-    def GetFreeTasks(self,tgname):
-        query = f"SELECT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks WHERE (SELECT Count(*) FROM taken WHERE taken.task_id = tasks.id) < tasks.max AND tasks.course = (SELECT course FROM students WHERE students.tgname = '{tgname}');"
+    def GetFreeTasks(self,chatid):
+        query = f"SELECT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks WHERE (SELECT Count(*) FROM taken WHERE taken.task_id = tasks.id) < tasks.max AND tasks.course = (SELECT course FROM students WHERE students.chatid = '{chatid}');"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -220,7 +220,7 @@ class DB:
     
     #Выгрузка всей базы
     def GetAllData(self):
-        query = f"SELECT students.id, students.name, students.lastname, students.group_number, students.course, students.tgname, taken.task_id, tasks.title, tasks.body, tasks.course as task_course, tasks.max FROM students LEFT JOIN taken ON students.id = taken.student_id LEFT JOIN tasks ON taken.task_id = tasks.id"
+        query = f"SELECT students.id, students.name, students.lastname, students.group_number, students.course, students.chatid, taken.task_id, tasks.title, tasks.body, tasks.course as task_course, tasks.max FROM students LEFT JOIN taken ON students.id = taken.student_id LEFT JOIN tasks ON taken.task_id = tasks.id"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)

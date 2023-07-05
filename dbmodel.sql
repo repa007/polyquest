@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: std-mysql
--- Время создания: Июл 05 2023 г., 12:49
+-- Время создания: Июл 05 2023 г., 17:03
 -- Версия сервера: 5.7.26-0ubuntu0.16.04.1
 -- Версия PHP: 8.1.15
 
@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `admin` (
   `id` int(11) NOT NULL,
-  `tgname` varchar(256) NOT NULL
+  `chatid` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -44,7 +44,7 @@ CREATE TABLE `students` (
   `lastname` varchar(64) NOT NULL,
   `group_number` varchar(64) NOT NULL,
   `course` int(11) NOT NULL,
-  `tgname` varchar(256) NOT NULL
+  `chatid` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -81,14 +81,14 @@ CREATE TABLE `tasks` (
 --
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `tgname` (`tgname`);
+  ADD UNIQUE KEY `chatid` (`chatid`);
 
 --
 -- Индексы таблицы `students`
 --
 ALTER TABLE `students`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `tgname` (`tgname`) USING BTREE;
+  ADD UNIQUE KEY `chatid` (`chatid`);
 
 --
 -- Индексы таблицы `taken`
