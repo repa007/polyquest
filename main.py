@@ -87,20 +87,18 @@ course = 0
 @bot.message_handler(commands=['reg'])
 def start(message):
         bot.send_message(message.from_user.id, "Как тебя зовут?")
-        bot.register_next_step_handler(message, get_name) #следующий шаг – функция get_name
-
+        bot.register_next_step_handler(message, get_name)
 def get_name(message): #получаем фамилию
     global name
     name = message.text
-    bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
-    bot.register_next_step_handler(message, get_surname)
 
-def get_surname(message):
-    global surname
-    surname = message.text
+    bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
+    bot.register_next_step_handler(message, get_lastname)
+def get_lastname(message):
+    global lastname
+    lastname = message.text
     bot.send_message(message.from_user.id, 'На каком ты курсе?')
     bot.register_next_step_handler(message, get_course)
-
 def get_course(message):
     global course
     #Надо придумать как обработать ошибку, except и catch того рот ебали, не работает
@@ -109,10 +107,16 @@ def get_course(message):
 
     bot.send_message(message.from_user.id, 'Какая у тебя группа?')
     bot.register_next_step_handler(message, get_group)
-
 def get_group(message):
-    global group
-    group = message.text
+    global group, course, lastname, name
+    group = int(message.text)
+    reply = message.chat.id
+    chatid = int(reply)
+    name = name
+    lastname = lastname
+    group = group
+    course = course
+    result = mydb.AddStudent(name, lastname, group, course, chatid)
     keyboard = types.InlineKeyboardMarkup() #наша клавиатура
     key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes') #кнопка «Да»
     keyboard.add(key_yes) #добавляем кнопку в клавиатуру
