@@ -6,7 +6,7 @@ from database import DB
 #mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#дима
 mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#Локальный
 
-bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
+bot = telebot.TeleBot('6361892876:AAEsCPl6R8Rh7c3XWmuHb3Ab9X5vOQHTHTY')
 from telebot import types
 
 
@@ -41,18 +41,30 @@ def Huy(message):
     reply = str(reply)
     bot.send_message(message.chat.id, reply, parse_mode='html')
 
+@bot.message_handler(commands=['MyTasks'])#to do
+def MyTasks(message):
+    reply = message.chat.id
+    reply = str(reply)
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+
+@bot.message_handler(commands=['MyChatid'])
+def MyChatid(message):
+    reply = message.chat.id
+    reply = str(reply)
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+
 @bot.message_handler(commands=['GetTasks'])
 def GetTasks(message):
     reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
-    rec = mydb.GetTasksAll()
-    records = [('запись 1', 1), ('запись 2', 2), ('запись 3', 3)]
+    records,e = mydb.GetTasksAll()
+    #records = [('запись 1', 1), ('запись 2', 2), ('запись 3', 3)]
 
-    buttons = [InlineKeyboardButton(r[0], callback_data=str(r[1])) for r  in rec]
-
-    # Создаем объект клавиатуры и добавляем в него кнопки
-    keyboard = InlineKeyboardMarkup()
-    for button in buttons:
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    i = 0
+    for record in records:
+        button = telebot.types.InlineKeyboardButton(text=str(records[i]["title"]), callback_data=str(i))
         keyboard.add(button)
+        i += 1
 
     # Отправляем сообщение с клавиатурой пользователю
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
