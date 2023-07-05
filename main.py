@@ -36,7 +36,7 @@ def help(message):
     bot.send_message(message.chat.id, reply, parse_mode='html', reply_markup=markup)
 
 @bot.message_handler(commands=['GetTask'])
-def startBot(message):
+def GetTasks(message):
     reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
     rec = mydb.GetTasksAll()
     records = [('запись 1', 1), ('запись 2', 2), ('запись 3', 3)]
