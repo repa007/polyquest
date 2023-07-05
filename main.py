@@ -8,7 +8,7 @@ mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#Локальный
 
 bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
 from telebot import types
-
+#hui
 
 #Commands
 @bot.message_handler(commands=['start'])
