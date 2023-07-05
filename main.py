@@ -88,7 +88,7 @@ course = 0
 def start(message):
         bot.send_message(message.from_user.id, "Как тебя зовут?")
         bot.register_next_step_handler(message, get_name)
-def get_name(message): #получаем фамилию
+def get_name(message):
     global name
     name = message.text
 
@@ -117,9 +117,9 @@ def get_group(message):
     group = group
     course = course
     result = mydb.AddStudent(name, lastname, group, course, chatid)
-    keyboard = types.InlineKeyboardMarkup() #наша клавиатура
-    key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes') #кнопка «Да»
-    keyboard.add(key_yes) #добавляем кнопку в клавиатуру
+    keyboard = types.InlineKeyboardMarkup()
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
+    keyboard.add(key_yes)
     key_no= types.InlineKeyboardButton(text='Нет', callback_data='no')
     keyboard.add(key_no)
     question = 'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+surname+'?'
