@@ -4,9 +4,9 @@ import pandas as pd
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import DB
 #mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#дима
-mydb = DB("127.0.0.1",3306,"root","228228228Nm","mydb")#Локальный
+mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Локальный
 
-bot = telebot.TeleBot('6361892876:AAEsCPl6R8Rh7c3XWmuHb3Ab9X5vOQHTHTY')
+bot = telebot.TeleBot('6254027754:AAGPm1Lf7vHs-3YnbRxTYceejUygDW_45Co')
 from telebot import types
 
 
@@ -71,31 +71,15 @@ def GetTasks(message):
 
 @bot.message_handler(commands=['GetExcel'])
 def GetExcel(message):
-    #import sqlite3
-    #db = sqlite3.connect('yourdatabase.db')
-    #cursor = db.cursor()
-    #cursor.execute('''SELECT * FROM students''')
-    #rows = cursor.fetchall()
-    #db.close()
-    #my_list = [[None for j in range(7)] for i in range(len(rows))]
-    #for i in range(len(rows)):
-       # my_list[i] = list(rows[i])
-   # print(my_list)
-
-    #cols = SELECT COUNT(*) FROM fooTable;
-  cols = 12 #считать сколько строк в бд
-  i = 0
-  #rows = 6
-
-  data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [2, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [3, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
-  #for i in range(cols):
-      #bot.reply_to(message, data[[]])
-  #transpose .T Если перевернуло
-  df = pd.DataFrame(data=data)
-  df.to_excel('Itog.xlsx')
-  bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
+    data, e = mydb.GetAllData()
+    columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname', 'chatid','task_id', 'title', 'body', 'task_course',
+               'max']
+    # for i in range(cols):
+    # bot.reply_to(message, data[[]])
+    # transpose .T Если перевернуло
+    df = pd.DataFrame(data=data, columns=columns)
+    df.to_excel('Itog.xlsx', index=False)
+    bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
 
 @bot.message_handler()#tol'ko vnizu
