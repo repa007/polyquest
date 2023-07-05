@@ -72,15 +72,54 @@ def GetTasks(message):
 @bot.message_handler(commands=['GetExcel'])
 def GetExcel(message):
     data, e = mydb.GetAllData()
-    columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname', 'chatid','task_id', 'title', 'body', 'task_course',
-               'max']
-    # for i in range(cols):
-    # bot.reply_to(message, data[[]])
+    columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname',
+               'chatid','task_id', 'title', 'body', 'task_course','max']
     # transpose .T Если перевернуло
     df = pd.DataFrame(data=data, columns=columns)
     df.to_excel('Itog.xlsx', index=False)
     bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
+#AddStudent('name', 'lastname', 'group_number', course, 'chatid')
+name = ''
+surname = ''
+group = 0
+course = 0
+@bot.message_handler(commands=['reg'])
+def start(message):
+        bot.send_message(message.from_user.id, "Как тебя зовут?")
+        bot.register_next_step_handler(message, get_name) #следующий шаг – функция get_name
+
+def get_name(message): #получаем фамилию
+    global name
+    name = message.text
+    bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
+    bot.register_next_step_handler(message, get_surname)
+
+def get_surname(message):
+    global surname
+    surname = message.text
+    bot.send_message(message.from_user.id, 'На каком ты курсе?')
+    bot.register_next_step_handler(message, get_course)
+
+def get_course(message):
+    global course
+    #Надо придумать как обработать ошибку, except и catch того рот ебали, не работает
+    bot.send_message(message.from_user.id, 'Цифрами, пожалуйста. Укажите номер группы как целое число.')
+    course = int(message.text)  # проверяем, что введено корректно
+
+    bot.send_message(message.from_user.id, 'Какая у тебя группа?')
+    bot.register_next_step_handler(message, get_group)
+
+def get_group(message):
+    global group
+    group = message.text
+    keyboard = types.InlineKeyboardMarkup() #наша клавиатура
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes') #кнопка «Да»
+    keyboard.add(key_yes) #добавляем кнопку в клавиатуру
+    key_no= types.InlineKeyboardButton(text='Нет', callback_data='no')
+    keyboard.add(key_no)
+    question = 'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+surname+'?'
+    bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
 @bot.message_handler()#tol'ko vnizu
 def info(message):
@@ -94,12 +133,10 @@ def info(message):
 def response(function_call):
   if function_call.message:
      if function_call.data == "registration": #to do
-        reply = "Это ебать бот типо который для пд можно выбрать задачу или иди нахуй короче"
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Пойти на хуй?", url="http://go-friend-go.narod.ru/"))
-        bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
-        bot.answer_callback_query(function_call.id)
+        def info(message):
+            bot.reply_to(message, "Я тебя не понимать 「(°ヘ°) \n Используй стандартные команды бота")
 
+#elif иде нахуй
      elif function_call.data.isdigit():
         reply = "Выбрана кнопка: " + function_call.data
         markup = types.InlineKeyboardMarkup()
