@@ -5,6 +5,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import DB
 
 mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Локальный
+#mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Илья
 
 bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
 from telebot import types
