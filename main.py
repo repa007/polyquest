@@ -2,6 +2,9 @@
 import telebot
 import pandas as pd
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from database import DB
+
+mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Локальный
 
 bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
 from telebot import types
@@ -64,6 +67,7 @@ def GetExcel(message):
   cols = 12 #считать сколько строк в бд
   i = 0
   #rows = 6
+
   data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
           [2, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
           [3, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
