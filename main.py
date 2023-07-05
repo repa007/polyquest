@@ -3,7 +3,7 @@ import telebot
 import pandas as pd
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import DB
-
+#mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#дима
 mydb = DB("127.0.0.1",3306,"root","j58AEiPY12@5","mydb")#Локальный
 
 bot = telebot.TeleBot('6323243276:AAFYCmIuRfV3b8U83N4H1oqqdEHZ5-Wc_Do')
@@ -38,9 +38,10 @@ def help(message):
 @bot.message_handler(commands=['GetTask'])
 def startBot(message):
     reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
+    rec = mydb.GetTasksAll()
     records = [('запись 1', 1), ('запись 2', 2), ('запись 3', 3)]
 
-    buttons = [InlineKeyboardButton(r[0], callback_data=str(r[1])) for r  in records]
+    buttons = [InlineKeyboardButton(r[0], callback_data=str(r[1])) for r  in rec]
 
     # Создаем объект клавиатуры и добавляем в него кнопки
     keyboard = InlineKeyboardMarkup()
