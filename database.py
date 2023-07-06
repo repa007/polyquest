@@ -217,7 +217,19 @@ class DB:
                 return rows, None
         except pymysql.Error as e:
             return None, e
-    
+
+    #Вернуть текст задания по id задания
+    def GetBodyOfTask(self,taskid):
+        query = f"SELECT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks WHERE tasks.id = {taskid}"
+        try:
+            with self.conn.cursor() as cursor:
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                return rows, None
+        except pymysql.Error as e:
+            return None, e
+
+
     #Выгрузка всей базы
     def GetAllData(self):
         query = f"SELECT students.id, students.name, students.lastname, students.group_number, students.course, students.chatid, taken.task_id, tasks.title, tasks.body, tasks.course as task_course, tasks.max FROM students LEFT JOIN taken ON students.id = taken.student_id LEFT JOIN tasks ON taken.task_id = tasks.id"

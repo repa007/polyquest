@@ -56,14 +56,14 @@ def MyChatid(message):
 @bot.message_handler(commands=['GetTasks'])
 def GetTasks(message):
     reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
-    records,e = mydb.GetTasksAll()
-    #records = [('запись 1', 1), ('запись 2', 2), ('запись 3', 3)]
+    #records,e = mydb.GetTasksAll()
+    records, e = mydb.GetFreeTasks(message.chat.id)
 
     keyboard = telebot.types.InlineKeyboardMarkup()
     i = 0
     for record in records:
-        button = telebot.types.InlineKeyboardButton(text=str(records[i]["title"]), callback_data=str(i))
-        keyboard.add(button)
+        button = telebot.types.InlineKeyboardButton(text=str(records[i]["id"])+": "+str(records[i]["title"]), callback_data=str(records[i]["id"]), align="left")
+        keyboard.row(button)
         i += 1
 
     # Отправляем сообщение с клавиатурой пользователю
@@ -71,31 +71,16 @@ def GetTasks(message):
 
 @bot.message_handler(commands=['GetExcel'])
 def GetExcel(message):
-    #import sqlite3
-    #db = sqlite3.connect('yourdatabase.db')
-    #cursor = db.cursor()
-    #cursor.execute('''SELECT * FROM students''')
-    #rows = cursor.fetchall()
-    #db.close()
-    #my_list = [[None for j in range(7)] for i in range(len(rows))]
-    #for i in range(len(rows)):
-       # my_list[i] = list(rows[i])
-   # print(my_list)
-
-    #cols = SELECT COUNT(*) FROM fooTable;
-  cols = 12 #считать сколько строк в бд
-  i = 0
-  #rows = 6
-
-  data = [[1, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [2, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа'],
-          [3, 'Id', 'ФИО', 'имяТГ', 'quest', 'курс', 'группа']]
-  #for i in range(cols):
-      #bot.reply_to(message, data[[]])
-  #transpose .T Если перевернуло
-  df = pd.DataFrame(data=data)
-  df.to_excel('Itog.xlsx')
-  bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
+    data, e = mydb.GetAllData()
+    columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname', 'chatid', 'task_id', 'title', 'body',
+               'task_course',
+               'max']
+    # for i in range(cols):
+    # bot.reply_to(message, data[[]])
+    # transpose .T Если перевернуло
+    df = pd.DataFrame(data=data, columns=columns)
+    df.to_excel('Itog.xlsx', index=False)
+    bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
 
 @bot.message_handler()#tol'ko vnizu
@@ -117,14 +102,21 @@ def response(function_call):
         bot.answer_callback_query(function_call.id)
 
      elif function_call.data.isdigit():
-        reply = "Выбрана кнопка: " + function_call.data
+        taskid = int(function_call.data)
+        array = mydb.GetBodyOfTask(taskid)
+        data_tuple = array[0]
+        data_list = data_tuple[0]
+        title = data_list["title"]
+        body = data_list["body"]
+        text = "<b>" + title + "</b>\n" + body
+        reply = "Выбрано задание: " + str(taskid) + text
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + function_call.data))
-        bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
+        markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + str(taskid)))
+        bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
         bot.answer_callback_query(function_call.id)
      elif "WantIt" in function_call.data:
         numtask = function_call.data.replace("WantIt", '')
-        reply = "Вы точно хотите принять задание №" + numtask + "?\nОтменить это действие будет невозможно!"
+        reply = "Вы точно хотите принять задание " + numtask + "?\nОтменить это действие будет невозможно!"
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Нет", callback_data="Hide"), types.InlineKeyboardButton("Принять", callback_data="Ofcourse" + str(numtask)))
         bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
@@ -133,6 +125,7 @@ def response(function_call):
          bot.delete_message(chat_id=function_call.message.chat.id, message_id=function_call.message.message_id)
      elif "Ofcourse" in function_call.data:
          numtask = function_call.data.replace("Ofcourse", '')
+         mydb.AssignTask(function_call.message.chat.id, numtask)
          #здесь значит надо прихуярить метод привязывания задачки к студенту (Семён, сделай метод для приписывания челу задачки по её номеру numtask)
 
 
