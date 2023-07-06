@@ -45,6 +45,20 @@ class DB:
                 return rows[0], None
         except pymysql.Error as e:
             return None, e
+
+    # Проверка на админа по chatid
+    def IsAdmin(self, chatid):
+        query = f"SELECT id FROM admin WHERE chatid='{chatid}'"
+        try:
+            with self.conn.cursor() as cursor:
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                if len(rows) >= 1:
+                    return True
+                else:
+                    return False
+        except pymysql.Error as e:
+            return None, e
         
     #Добавить задание
     def NewTask(self,title,body,course,max):
@@ -226,6 +240,17 @@ class DB:
                 cursor.execute(query)
                 rows = cursor.fetchall()
                 return rows, None
+        except pymysql.Error as e:
+            return None, e
+
+    #Возвращает кол-во оставшихся мест у задания
+    def NumberOfSeatsLeft(self, task_id):
+        query = f"SELECT ((SELECT tasks.max FROM tasks WHERE tasks.id = '{task_id}') - COUNT(*)) as num FROM taken WHERE taken.task_id = '{task_id}'"
+        try:
+            with self.conn.cursor() as cursor:
+                cursor.execute(query)
+                row = cursor.fetchall()
+                return row[0]["num"], None
         except pymysql.Error as e:
             return None, e
 

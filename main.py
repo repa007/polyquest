@@ -41,6 +41,55 @@ def Huy(message):
     reply = str(reply)
     bot.send_message(message.chat.id, reply, parse_mode='html')
 
+
+@bot.message_handler(commands=['NewTask'])
+def NewTask_start(message):
+    reply = "Для какого курса задание? "
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+    bot.register_next_step_handler(message, NewTask_course)
+
+def NewTask_course(message):
+    course = message.text
+    reply = "Придумайте заголовок: "
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+    bot.register_next_step_handler(message, NewTask_title, course)
+
+def NewTask_title(message, course):
+    title = message.text
+    reply = "Сколько человек максимум может взять это задание? "
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+    bot.register_next_step_handler(message, NewTask_max, course, title)
+
+def NewTask_max(message, course, title):
+    max = message.text
+    reply = "Полноценно опишите задание. Обязательно укажите, куда должен обратиться студент после того как возьмёт задание. "
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+    bot.register_next_step_handler(message, NewTask_body, course, title, max)
+
+def NewTask_body(message, course, title, max):
+    body = message.text
+    reply = "Проверьте правильность заполнения."
+    reply += "\nЗаголовок: " + title
+    reply += "\nДля курса № " + course
+    reply += "\nМаксимальное кол-во студентов: " + max
+    reply += "\nОписание задания: \n" + body
+    keyboard = types.InlineKeyboardMarkup()
+    no_nt = types.InlineKeyboardButton(text='Отмена', callback_data='Hide')
+    yes_nt = types.InlineKeyboardButton(text='Добавить', callback_data=f'y-nt_{title}_{str(course)}_{str(max)}_{body}')
+    keyboard.add(no_nt, yes_nt)
+    bot.send_message(message.chat.id, reply, reply_markup=keyboard)
+
+
+
+
+
+
+@bot.message_handler(commands=['DeleteTask']) #для отладки
+def DeleteTask(message):
+    reply,e = mydb.GetTasksAll()
+    reply = str(reply)
+    bot.send_message(message.chat.id, reply, parse_mode='html')
+
 @bot.message_handler(commands=['MyTasks'])#to do
 def MyTasks(message):
     chat_id = message.chat.id
@@ -119,12 +168,26 @@ def get_group(message, name, lastname, course):
     chatid = int(reply)
 
     keyboard = types.InlineKeyboardMarkup()
-    key_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes_{name}_{lastname}_{group}_{course}_{chatid}')
-    key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes-reg_{name}_{lastname}_{group}_{course}_{chatid}')
+    key_no = types.InlineKeyboardButton(text='Нет', callback_data='no-reg')
     keyboard.add(key_yes, key_no)
 
     question = 'Ты учишься на '+str(course)+' курсе\n'+'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+lastname+'?'
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
+
+@bot.message_handler()
+def AddAdmin(message):
+    isadmin = mydb.IsAdmin(message.chat.id)
+    if (isadmin == True):
+        e = mydb.IsAdmin(message.chat.id)
+        if (e!=None):
+            bot.send_message(message.from_user.id, str(e))
+        else:
+            reply = "Готово!"
+            bot.send_message(message.from_user.id, reply)
+    else:
+        reply = "Только администраторы могут добавлять администраторов"
+        bot.send_message(message.from_user.id, reply)
 
 @bot.message_handler()#tol'ko vnizu
 def info(message):
@@ -151,12 +214,14 @@ def response(function_call):
         data_list = data_tuple[0]
         title = data_list["title"]
         body = data_list["body"]
+        left, e = mydb.NumberOfSeatsLeft(taskid)
         text = "<b>" + title + "</b>\n" + body
-        reply = "Выбрано задание: " + str(taskid) + text
+        reply = "Задание: " + str(taskid) + text + "\n\n\n Свободных мест:" + str(left)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + str(taskid)))
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
         bot.answer_callback_query(function_call.id)
+
      elif "WantIt" in function_call.data:
         numtask = function_call.data.replace("WantIt", '')
         reply = "Вы точно хотите принять задание " + numtask + "?\nОтменить это действие будет невозможно!"
@@ -164,19 +229,39 @@ def response(function_call):
         markup.add(types.InlineKeyboardButton("Нет", callback_data="Hide"), types.InlineKeyboardButton("Принять", callback_data="Ofcourse" + str(numtask)))
         bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
         bot.answer_callback_query(function_call.id)
+
      elif function_call.data == "Hide":
          bot.delete_message(chat_id=function_call.message.chat.id, message_id=function_call.message.message_id)
+
      elif "Ofcourse" in function_call.data:
          numtask = function_call.data.replace("Ofcourse", '')
-         mydb.AssignTask(function_call.message.chat.id, numtask)
-         #здесь значит надо прихуярить метод привязывания задачки к студенту (Семён, сделай метод для приписывания челу задачки по её номеру numtask)
+         result = mydb.AssignTask(function_call.message.chat.id, numtask)
+         if result != None:
+             result = str(result)
+             bot.reply_to(function_call.message, result)
+         else:
+             result = "Готово!"
+             bot.reply_to(function_call.message, result)
 
+     elif 'y-nt' in function_call.data:
+         _, title, course, max, body = function_call.data.split('_')
+         chatid = function_call.message.chat.id
+         isadmin = mydb.IsAdmin(chatid)
+         if (max.isdigit()) and (course.isdigit()):
+             max = int(max)
+             course = int(max)
+             if (isadmin == True):
+                 mydb.NewTask(title, body, int(course), int(max))
+                 reply = "Готово!"
+             else:
+                 reply = "У вас нет прав администратора."
+         bot.send_message(function_call.message.chat.id, reply)
  #def callback_worker(call, name=None, lastname=None, group=None, course=None, chatid=None):
-     elif 'yes' in function_call.data:
+     elif 'yes-reg' in function_call.data:
         _, name, lastname, group, course, chatid = function_call.data.split('_')
         result = mydb.AddStudent(name, lastname, group, course, chatid)
         bot.send_message(function_call.message.chat.id, 'Запомню : )')
-     elif 'no' in function_call.data:# переспрашиваем
+     elif 'no-reg' == function_call.data:# переспрашиваем
         bot.send_message(function_call.message.chat.id, 'Давай проведём регистрацию заново. Введи /reg')
 
 
