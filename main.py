@@ -13,34 +13,29 @@ from telebot import types
 #Commands
 @bot.message_handler(commands=['start'])
 def startBot(message):
-  reply = f"<b>{message.from_user.first_name} {message.from_user.last_name}</b>, привет!\nЭто бот для выдачи задач. Вы можете открыть инструкцию командой /help\nДля начала следует пройти регистрацию."
-  markup = types.InlineKeyboardMarkup()
-  button_registration = types.InlineKeyboardButton(text = 'Регистрация', callback_data='registration')
-  markup.add(button_registration)
-  bot.send_message(message.chat.id, reply, parse_mode='html', reply_markup=markup)
+  reply = "Привет!\nЭто бот для выдачи задач. Вы можете открыть инструкцию командой /help\nДля начала следует пройти регистрацию с помощью команды /reg. Касается только студентов."
+  bot.send_message(message.chat.id, reply, parse_mode='html')
 
 @bot.message_handler(commands=['help'])
 def help(message):
     reply = 'Для начала пройдите регистрацию (Пожалуйста, укажите ваши реальные данные, чтоб потом не пришлось выяснять кто такой Taburetka(⌐■_■)). Если вы меняли имя пользователя в Telegram после регистрации, то вам следует зарегистрироваться повторно /registration или сменить имя пользователя на прежнее, иначе бот вас не узнает.\n\n'
     reply+= "<b>Доступные команды:</b>\n"
     reply+= "/help - как эта штука работает\n"
-    reply+= "/AllTasks - Вывести все задания из бд\n"
-    reply+= "/registration - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
+    reply+= "/reg - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
     reply+= "/GetTasks - Жми сюда чтобы глянуть какие задачи свободны и взять какие-нибудь себе\n"
     reply+= "/MyTasks - Жми сюда чтобы глянуть какие задачи ты уже взял\n"
     reply+= "/GetExcel - Выгружает базу данных бота табличкой\n"
-    reply+= "/Start - Приветствие (вы его уже видели)\n"
+    reply+= "/start - Приветствие (вы его уже видели)\n"
     reply+= "\nКогда возьмёте задание, свяжитесь с контактом указанным в описании задания и сообщите об этом\n"
+    reply += "\nДля админов:\n"
+    reply += "/AllTasks - Вывести все задания из бд\n"
+    reply += "/NewTask - Добавить задачу\n"
+    reply += "/DeleteTask - Удалить задачи\n"
+    reply += "/AddAdmin - Удалить задачи\n"
     markup = types.InlineKeyboardMarkup()
     button_registration = types.InlineKeyboardButton(text='Скрыть', callback_data='Hide')
     markup.add(button_registration)
     bot.send_message(message.chat.id, reply, parse_mode='html', reply_markup=markup)
-
-@bot.message_handler(commands=['Huy']) #для отладки
-def Huy(message):
-    reply,e = mydb.GetTasksAll()
-    reply = str(reply)
-    bot.send_message(message.chat.id, reply, parse_mode='html')
 
 
 @bot.message_handler(commands=['NewTask'])
@@ -81,16 +76,6 @@ def NewTask_body(message, course, title, max):
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
 
 
-
-
-
-
-@bot.message_handler(commands=['DeleteTask']) #для отладки
-def DeleteTask(message):
-    reply,e = mydb.GetTasksAll()
-    reply = str(reply)
-    bot.send_message(message.chat.id, reply, parse_mode='html')
-
 @bot.message_handler(commands=['MyTasks'])#to do
 def MyTasks(message):
     chat_id = message.chat.id
@@ -109,8 +94,14 @@ def MyTasks(message):
 
 @bot.message_handler(commands=['DeleteTask'])
 def delete_task_command_handler(message):
-    bot.reply_to(message, "Введите номер задания, которое Вы хотите удалить. Чтобы увидеть список задач введите /AllTask")
-    bot.register_next_step_handler(message, delete_task_handler)
+    chatid = message.chat.id
+    isadmin = mydb.IsAdmin()
+    if (isadmin == True):
+        bot.reply_to(message, "Введите номер задания, которое Вы хотите удалить. Чтобы увидеть список задач введите /AllTask")
+        bot.register_next_step_handler(message, delete_task_handler)
+    else:
+        bot.reply_to(message, "Для удаления заданий нужны права администратора!")
+
 def delete_task_handler(message):
     try:
         task_id = int(message.text)
@@ -130,8 +121,7 @@ def AllTasks(message):
         keyboard = telebot.types.InlineKeyboardMarkup()
         i = 0
         for record in records:
-            button = telebot.types.InlineKeyboardButton(text=str(records[i]["id"]) + ": " + str(records[i]["title"]),
-                                                        callback_data=str(records[i]["id"])+'GetAll', align="left")
+            button = telebot.types.InlineKeyboardButton(text=str(records[i]["id"]) + ": " + str(records[i]["title"]), callback_data=str(records[i]["id"])+'GetAll', align="left")
             keyboard.row(button)
             i += 1
 
@@ -155,7 +145,7 @@ def GetTasks(message):
     keyboard = telebot.types.InlineKeyboardMarkup()
     i = 0
     for record in records:
-        button = telebot.types.InlineKeyboardButton(text=str(records[i]["id"])+": "+str(records[i]["title"]), callback_data=str(records[i]["id"]), align="left")
+        button = telebot.types.InlineKeyboardButton(text=str(records[i]["id"])+": "+str(records[i]["title"]), callback_data=str(records[i]["id"])+"GetTask", align="left")
         keyboard.row(button)
         i += 1
 
@@ -208,7 +198,7 @@ def get_group(message, name, lastname, course):
     question = 'Ты учишься на '+str(course)+' курсе\n'+'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+lastname+'?'
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
-@bot.message_handler()
+@bot.message_handler(commands=['AddAdmin'])
 def AddAdmin(message):
     isadmin = mydb.IsAdmin(message.chat.id)
     if (isadmin == True):
@@ -230,30 +220,12 @@ def info(message):
 #That is all Commands
 
 
+
 @bot.callback_query_handler(func=lambda call:True)
 def response(function_call):
   if function_call.message:
-     if function_call.data == "registration": #to do
-        reply = ""
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Пойти на хуй?", url="http://go-friend-go.narod.ru/"))
-        bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
-        bot.answer_callback_query(function_call.id)
-
-     elif (function_call.data.replace('GetAll','').isdigit()):
+     if (function_call.data.replace('GetAll','').isdigit()):
         taskid = int(function_call.data.replace('GetAll', ''))
-        array = mydb.GetBodyOfTask(taskid)
-        data_tuple = array[0]
-        data_list = data_tuple[0]
-        title = data_list["title"]
-        body = data_list["body"]
-        text = "<b>" + title + "</b>\n" + body
-        reply = "Выбрано задание: " + str(taskid) + text
-        bot.send_message(function_call.message.chat.id, reply,  parse_mode='html')
-        bot.answer_callback_query(function_call.id)
-
-     elif function_call.data.isdigit():
-        taskid = int(function_call.data)
         array = mydb.GetBodyOfTask(taskid)
         data_tuple = array[0]
         data_list = data_tuple[0]
@@ -261,7 +233,20 @@ def response(function_call):
         body = data_list["body"]
         left, e = mydb.NumberOfSeatsLeft(taskid)
         text = "<b>" + title + "</b>\n" + body
-        reply = "Задание: " + str(taskid) + text + "\n\n\n Свободных мест:" + str(left)
+        reply = "Выбрано задание: " + str(taskid) + text + "\n\n\n Свободных мест: " + str(left)
+        bot.send_message(function_call.message.chat.id, reply,  parse_mode='html')
+        bot.answer_callback_query(function_call.id)
+
+     elif function_call.data.replace('GetTask','').isdigit():
+        taskid = int(function_call.data.replace('GetTask', ''))
+        array = mydb.GetBodyOfTask(taskid)
+        data_tuple = array[0]
+        data_list = data_tuple[0]
+        title = data_list["title"]
+        body = data_list["body"]
+        left, e = mydb.NumberOfSeatsLeft(taskid)
+        text = "<b>" + title + "</b>\n" + body
+        reply = "Задание: " + str(taskid) + text + "\n\n\n Свободных мест: " + str(left)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + str(taskid)))
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
@@ -308,6 +293,7 @@ def response(function_call):
         bot.send_message(function_call.message.chat.id, 'Запомню : )')
      elif 'no-reg' == function_call.data:# переспрашиваем
         bot.send_message(function_call.message.chat.id, 'Давай проведём регистрацию заново. Введи /reg')
+
 
 
 bot.infinity_polling() #For permonent working
