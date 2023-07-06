@@ -43,9 +43,27 @@ def Huy(message):
 
 @bot.message_handler(commands=['MyTasks'])#to do
 def MyTasks(message):
-    reply = message.chat.id
-    reply = str(reply)
-    bot.send_message(message.chat.id, reply, parse_mode='html')
+    # Получаем chat_id пользователя, чтобы получить его взятые задачи
+    chat_id = message.chat.id
+    # Получаем список задач пользователя из базы данных
+    tasks, e = mydb.GetMyTasks(chat_id)
+
+    # Если список задач пустой, сообщаем об этом пользователю
+    if not tasks:
+        reply = "Вы не взяли ни одной задачи."
+    else:
+        # Составляем текстовое сообщение с информацией о задачах пользователя
+        reply = f"Список ваших задач:\n\n"
+        for task in tasks:
+            reply += f"Задача {task['id_task']}:\n"
+            reply += f"Название: {task['title']}\n"
+            reply += f"Описание: {task['body']}\n"
+            reply += f"Курс: {task['task_course']}\n"
+            reply += "\n"
+
+    # Отправляем сообщение пользователю
+    bot.send_message(chat_id, reply)
+
 
 @bot.message_handler(commands=['MyChatid'])
 def MyChatid(message):
