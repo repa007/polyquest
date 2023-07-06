@@ -80,49 +80,38 @@ def GetExcel(message):
     bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
 #AddStudent('name', 'lastname', 'group_number', course, 'chatid')
-name = ''
-surname = ''
-group = 0
-course = 0
 @bot.message_handler(commands=['reg'])
 def start(message):
-        bot.send_message(message.from_user.id, "Как тебя зовут?")
-        bot.register_next_step_handler(message, get_name)
-def get_name(message):
-    global name
-    name = message.text
+    bot.send_message(message.from_user.id, "Как тебя зовут?")
+    bot.register_next_step_handler(message, get_name)
 
+def get_name(message):
+    name = message.text
     bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
-    bot.register_next_step_handler(message, get_lastname)
-def get_lastname(message):
-    global lastname
+    bot.register_next_step_handler(message, get_lastname, name)
+def get_lastname(message, name):
     lastname = message.text
     bot.send_message(message.from_user.id, 'На каком ты курсе?')
-    bot.register_next_step_handler(message, get_course)
-def get_course(message):
-    global course
+    bot.register_next_step_handler(message, get_course, name, lastname)
+def get_course(message, name, lastname):
     #Надо придумать как обработать ошибку, except и catch того рот ебали, не работает
     bot.send_message(message.from_user.id, 'Цифрами, пожалуйста. Укажите номер группы как целое число.')
-    course = int(message.text)  # проверяем, что введено корректно
+    course = message.text  # проверяем, что введено корректно
 
     bot.send_message(message.from_user.id, 'Какая у тебя группа?')
-    bot.register_next_step_handler(message, get_group)
-def get_group(message):
-    global group, course, lastname, name
-    group = int(message.text)
+    bot.register_next_step_handler(message, get_group, name, lastname, course)
+
+def get_group(message, name, lastname, course):
+    group = message.text
     reply = message.chat.id
     chatid = int(reply)
-    name = name
-    lastname = lastname
-    group = group
-    course = course
-    result = mydb.AddStudent(name, lastname, group, course, chatid)
+
     keyboard = types.InlineKeyboardMarkup()
-    key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')
-    keyboard.add(key_yes)
-    key_no= types.InlineKeyboardButton(text='Нет', callback_data='no')
-    keyboard.add(key_no)
-    question = 'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+surname+'?'
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes_{name}_{lastname}_{group}_{course}_{chatid}')
+    key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+    keyboard.add(key_yes, key_no)
+
+    question = 'Ты учишься на '+str(course)+' курсе\n'+'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+lastname+'?'
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
 @bot.message_handler()#tol'ko vnizu
@@ -155,11 +144,18 @@ def response(function_call):
         bot.send_message(function_call.message.chat.id, reply, reply_markup=markup)
         bot.answer_callback_query(function_call.id)
      elif function_call.data == "Hide":
-         bot.delete_message(chat_id=function_call.message.chat.id, message_id=function_call.message.message_id)
+        bot.delete_message(chat_id=function_call.message.chat.id, message_id=function_call.message.message_id)
      elif "Ofcourse" in function_call.data:
-         numtask = function_call.data.replace("Ofcourse", '')
-         #здесь значит надо прихуярить метод привязывания задачки к студенту (Семён, сделай метод для приписывания челу задачки по её номеру numtask)
+        numtask = function_call.data.replace("Ofcourse", '')
+        #здесь значит надо прихуярить метод привязывания задачки к студенту (Семён, сделай метод для приписывания челу задачки по её номеру numtask)
 
+  #def callback_worker(call, name=None, lastname=None, group=None, course=None, chatid=None):
+     elif 'yes' in function_call.data:
+        _, name, lastname, group, course, chatid = function_call.data.split('_')
+        result = mydb.AddStudent(name, lastname, group, course, chatid)
+        bot.send_message(function_call.message.chat.id, 'Запомню : )')
+     elif 'no' in function_call.data:# переспрашиваем
+        bot.send_message(function_call.message.chat.id, 'Давай проведём регистрацию заново. Введи /reg')
 
 
 bot.infinity_polling() #For permonent working
