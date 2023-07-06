@@ -240,5 +240,3 @@ class DB:
                 return rows, None
         except pymysql.Error as e:
             return None, e
-
-
