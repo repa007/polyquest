@@ -43,9 +43,20 @@ def Huy(message):
 
 @bot.message_handler(commands=['MyTasks'])#to do
 def MyTasks(message):
-    reply = message.chat.id
-    reply = str(reply)
-    bot.send_message(message.chat.id, reply, parse_mode='html')
+    chat_id = message.chat.id
+    tasks, e = mydb.GetMyTasks(chat_id)
+
+    if not tasks:
+        reply = "Вы не взяли ни одной задачи."
+    else:
+        reply = f"Список ваших задач:\n\n"
+        for task in tasks:
+            reply += f"Задача {task['id_task']}:\n"
+            reply += f"Название: {task['title']}\n"
+            reply += f"Описание: {task['body']}\n"
+            reply += f"Курс: {task['task_course']}\n"
+            reply += "\n"
+    bot.send_message(chat_id, reply)
 
 @bot.message_handler(commands=['MyChatid'])
 def MyChatid(message):
@@ -75,13 +86,45 @@ def GetExcel(message):
     columns = ['id', 'name', 'lastname', 'group_number', 'course', 'tgname', 'chatid', 'task_id', 'title', 'body',
                'task_course',
                'max']
-    # for i in range(cols):
-    # bot.reply_to(message, data[[]])
     # transpose .T Если перевернуло
     df = pd.DataFrame(data=data, columns=columns)
     df.to_excel('Itog.xlsx', index=False)
     bot.send_document(message.chat.id, open("Itog.xlsx", "rb"))
 
+#AddStudent('name', 'lastname', 'group_number', course, 'chatid')
+@bot.message_handler(commands=['reg'])
+def start(message):
+    bot.send_message(message.from_user.id, "Как тебя зовут?")
+    bot.register_next_step_handler(message, get_name)
+
+def get_name(message):
+    name = message.text
+    bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
+    bot.register_next_step_handler(message, get_lastname, name)
+def get_lastname(message, name):
+    lastname = message.text
+    bot.send_message(message.from_user.id, 'На каком ты курсе?')
+    bot.register_next_step_handler(message, get_course, name, lastname)
+def get_course(message, name, lastname):
+    #Надо придумать как обработать ошибку, except и catch того рот ебали, не работает
+    bot.send_message(message.from_user.id, 'Цифрами, пожалуйста. Укажите номер группы как целое число.')
+    course = message.text  # проверяем, что введено корректно
+
+    bot.send_message(message.from_user.id, 'Какая у тебя группа?')
+    bot.register_next_step_handler(message, get_group, name, lastname, course)
+
+def get_group(message, name, lastname, course):
+    group = message.text
+    reply = message.chat.id
+    chatid = int(reply)
+
+    keyboard = types.InlineKeyboardMarkup()
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes_{name}_{lastname}_{group}_{course}_{chatid}')
+    key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+    keyboard.add(key_yes, key_no)
+
+    question = 'Ты учишься на '+str(course)+' курсе\n'+'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+lastname+'?'
+    bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
 @bot.message_handler()#tol'ko vnizu
 def info(message):
@@ -128,6 +171,13 @@ def response(function_call):
          mydb.AssignTask(function_call.message.chat.id, numtask)
          #здесь значит надо прихуярить метод привязывания задачки к студенту (Семён, сделай метод для приписывания челу задачки по её номеру numtask)
 
+ #def callback_worker(call, name=None, lastname=None, group=None, course=None, chatid=None):
+     elif 'yes' in function_call.data:
+        _, name, lastname, group, course, chatid = function_call.data.split('_')
+        result = mydb.AddStudent(name, lastname, group, course, chatid)
+        bot.send_message(function_call.message.chat.id, 'Запомню : )')
+     elif 'no' in function_call.data:# переспрашиваем
+        bot.send_message(function_call.message.chat.id, 'Давай проведём регистрацию заново. Введи /reg')
 
 
 bot.infinity_polling() #For permonent working
