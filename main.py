@@ -210,18 +210,24 @@ def get_group(message, name, lastname, course):
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
 @bot.message_handler(commands=['addadmin'])
-def AddAdmin(message):
+def AddAdmin1(message):
     isadmin = mydb.IsAdmin(message.chat.id)
     if (isadmin == True):
-        e = mydb.IsAdmin(message.chat.id)
-        if (e!=None):
-            bot.send_message(message.from_user.id, str(e))
-        else:
-            reply = "Готово!"
-            bot.send_message(message.from_user.id, reply)
+        reply = "Введите chatid администратора, которого хотите добавить"
+        bot.send_message(message.from_user.id, reply)
+        bot.register_next_step_handler(message, AddAdmin2)
     else:
         reply = "Только администраторы могут добавлять администраторов"
         bot.send_message(message.from_user.id, reply)
+
+def AddAdmin2(message):
+    e = mydb.AddAdmin(message.text)
+    if (e == None):
+        reply = "Готово"
+        bot.send_message(message.from_user.id, reply)
+    else:
+        bot.send_message(message.from_user.id, str(e))
+
 
 @bot.message_handler()#tol'ko vnizu
 def info(message):
