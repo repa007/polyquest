@@ -263,13 +263,13 @@ def response(function_call):
         body = data_list["body"]
         left, e = mydb.NumberOfSeatsLeft(taskid)
         text = "<b>" + title + "</b>\n" + body
-        reply = "Задание: " + str(taskid) + text + "\n\n\n Свободных мест: " + str(left)
+        reply = "Задание " + str(taskid) + ":" + text + "\n\n\n Свободных мест: " + str(left)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + str(taskid)))
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
         bot.answer_callback_query(function_call.id)
 
-     elif "UUID" in function_call.data:
+     elif "WantIt" in function_call.data:
         numtask = function_call.data.replace("WantIt", '')
         reply = "Вы точно хотите принять задание " + numtask + "?\nОтменить это действие будет невозможно!"
         markup = types.InlineKeyboardMarkup()
