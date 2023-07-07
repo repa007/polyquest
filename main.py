@@ -22,7 +22,7 @@ def startBot(message):
 
 @bot.message_handler(commands=['help'])
 def help(message):
-    reply = 'Для начала пройдите регистрацию (Пожалуйста, укажите ваши реальные данные, чтоб потом не пришлось выяснять кто такой Taburetka(⌐■_■)). Если вы меняли имя пользователя в Telegram после регистрации, то вам следует зарегистрироваться повторно /registration или сменить имя пользователя на прежнее, иначе бот вас не узнает.\n\n'
+    reply = 'Для начала пройдите регистрацию (Пожалуйста, укажите ваши реальные данные, чтоб потом не пришлось выяснять кто такой Taburetka(⌐■_■)).\n\n'
     reply+= "<b>Доступные команды:</b>\n"
     reply+= "/help - как эта штука работает\n"
     reply+= "/reg - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
@@ -106,7 +106,7 @@ def MyTasks(message):
 @bot.message_handler(commands=['deletetask'])
 def delete_task_command_handler(message):
     chatid = message.chat.id
-    isadmin = mydb.IsAdmin()
+    isadmin = mydb.IsAdmin(chatid)
     if (isadmin == True):
         bot.reply_to(message, "Введите номер задания, которое Вы хотите удалить. Чтобы увидеть список задач введите /AllTask")
         bot.register_next_step_handler(message, delete_task_handler)
