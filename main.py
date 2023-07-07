@@ -22,23 +22,23 @@ def help(message):
     reply+= "<b>Доступные команды:</b>\n"
     reply+= "/help - как эта штука работает\n"
     reply+= "/reg - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
-    reply+= "/GetTasks - Жми сюда чтобы глянуть какие задачи свободны и взять какие-нибудь себе\n"
-    reply+= "/MyTasks - Жми сюда чтобы глянуть какие задачи ты уже взял\n"
-    reply+= "/GetExcel - Выгружает базу данных бота табличкой\n"
-    reply+= "/start - Приветствие (вы его уже видели)\n"
+    reply+= "/gettasks - Жми сюда чтобы глянуть какие задачи свободны и взять какие-нибудь себе\n"
     reply+= "\nКогда возьмёте задание, свяжитесь с контактом указанным в описании задания и сообщите об этом\n"
+    reply+= "/mytasks - Жми сюда чтобы глянуть какие задачи ты уже взял\n"
+    reply+= "/getexcel - Выгружает базу данных бота табличкой\n"
+    reply+= "/start - Приветствие (вы его уже видели)\n"
     reply += "\nДля админов:\n"
-    reply += "/AllTasks - Вывести все задания из бд\n"
-    reply += "/NewTask - Добавить задачу\n"
-    reply += "/DeleteTask - Удалить задачи\n"
-    reply += "/AddAdmin - Удалить задачи\n"
+    reply += "/alltasks - Вывести все задания из бд\n"
+    reply += "/newtask - Добавить задачу\n"
+    reply += "/deletetask - Удалить задачи\n"
+    reply += "/addadmin - Удалить задачи\n"
     markup = types.InlineKeyboardMarkup()
     button_registration = types.InlineKeyboardButton(text='Скрыть', callback_data='Hide')
     markup.add(button_registration)
     bot.send_message(message.chat.id, reply, parse_mode='html', reply_markup=markup)
 
 
-@bot.message_handler(commands=['NewTask'])
+@bot.message_handler(commands=['newtask'])
 def NewTask_start(message):
     reply = "Для какого курса задание? "
     bot.send_message(message.chat.id, reply, parse_mode='html')
@@ -76,7 +76,7 @@ def NewTask_body(message, course, title, max):
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
 
 
-@bot.message_handler(commands=['MyTasks'])#to do
+@bot.message_handler(commands=['mytasks'])#to do
 def MyTasks(message):
     chat_id = message.chat.id
     tasks, e = mydb.GetMyTasks(chat_id)
@@ -92,7 +92,7 @@ def MyTasks(message):
             reply += "——————————————————\n"
     bot.send_message(chat_id, reply)
 
-@bot.message_handler(commands=['DeleteTask'])
+@bot.message_handler(commands=['deletetask'])
 def delete_task_command_handler(message):
     chatid = message.chat.id
     isadmin = mydb.IsAdmin()
@@ -112,7 +112,7 @@ def delete_task_handler(message):
     except:
         bot.reply_to(message, "Произошла ошибка при удалении задачи.")
 
-@bot.message_handler(commands=['AllTasks'])
+@bot.message_handler(commands=['alltasks'])
 def AllTasks(message):
         reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
         # records,e = mydb.GetTasksAll()
@@ -130,13 +130,13 @@ def AllTasks(message):
 
 
 
-@bot.message_handler(commands=['MyChatid'])
+@bot.message_handler(commands=['mychatid'])
 def MyChatid(message):
     reply = message.chat.id
     reply = str(reply)
     bot.send_message(message.chat.id, reply, parse_mode='html')
 
-@bot.message_handler(commands=['GetTasks'])
+@bot.message_handler(commands=['gettasks'])
 def GetTasks(message):
     reply = 'Вот список задач, нажмите на интересующую чтобы узнать подробнее:'
     #records,e = mydb.GetTasksAll()
@@ -152,7 +152,7 @@ def GetTasks(message):
     # Отправляем сообщение с клавиатурой пользователю
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
 
-@bot.message_handler(commands=['GetExcel'])
+@bot.message_handler(commands=['getexcel'])
 def GetExcel(message):
     data, e = mydb.GetAllData()
     columns = ['id', 'name', 'lastname', 'group_number', 'course', 'chatid', 'task_id', 'title', 'body',
@@ -198,7 +198,7 @@ def get_group(message, name, lastname, course):
     question = 'Ты учишься на '+str(course)+' курсе\n'+'Твоя группа - '+str(group)+'\nТебя зовут '+name+' '+lastname+'?'
     bot.send_message(message.from_user.id, text=question, reply_markup=keyboard)
 
-@bot.message_handler(commands=['AddAdmin'])
+@bot.message_handler(commands=['addadmin'])
 def AddAdmin(message):
     isadmin = mydb.IsAdmin(message.chat.id)
     if (isadmin == True):
