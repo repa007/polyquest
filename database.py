@@ -84,7 +84,7 @@ class DB:
 
     #Получить список всех заданий
     def GetTasksAll(self):
-        query = f"SELECT * FROM tasks ORDER BY course, title"
+        query = f"SELECT * FROM tasks ORDER BY id, title"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)
@@ -223,7 +223,7 @@ class DB:
 
     #Получить список свободных заданий для студента
     def GetFreeTasks(self,chatid):
-        query = f"SELECT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks WHERE (SELECT Count(*) FROM taken WHERE taken.task_id = tasks.id) < tasks.max AND tasks.course = (SELECT course FROM students WHERE students.chatid = '{chatid}');"
+        query = f"SELECT tasks.id, tasks.title, tasks.body, tasks.course, tasks.max FROM tasks WHERE (SELECT Count(*) FROM taken WHERE taken.task_id = tasks.id) < tasks.max AND tasks.course = (SELECT course FROM students WHERE students.chatid = '{chatid}') ORDER by tasks.id;"
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(query)

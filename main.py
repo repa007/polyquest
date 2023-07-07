@@ -1,5 +1,9 @@
+import re
 
 import telebot
+import uuid
+from datetime import datetime
+
 import pandas as pd
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import DB
@@ -58,21 +62,27 @@ def NewTask_title(message, course):
     bot.register_next_step_handler(message, NewTask_max, course, title)
 
 def NewTask_max(message, course, title):
-    max = message.text
+    maximum = message.text
     reply = "Полноценно опишите задание. Обязательно укажите, куда должен обратиться студент после того как возьмёт задание. "
     bot.send_message(message.chat.id, reply, parse_mode='html')
-    bot.register_next_step_handler(message, NewTask_body, course, title, max)
+    bot.register_next_step_handler(message, NewTask_body, course, title, maximum)
 
-def NewTask_body(message, course, title, max):
-    body = message.text
+tasks = {}
+
+
+def NewTask_body(message, course, title, maximum):
+    body = str(message.text)
     reply = "Проверьте правильность заполнения."
     reply += "\nЗаголовок: " + title
     reply += "\nДля курса № " + course
-    reply += "\nМаксимальное кол-во студентов: " + max
+    reply += "\nМаксимальное кол-во студентов: " + maximum
     reply += "\nОписание задания: \n" + body
+    task_id = str(datetime.now())  # создаем уникальный идентификатор для задачи
+    tasks[task_id] = {'title': title, 'course': course, 'maximum': maximum, 'body': body}
     keyboard = types.InlineKeyboardMarkup()
     no_nt = types.InlineKeyboardButton(text='Отмена', callback_data='Hide')
-    yes_nt = types.InlineKeyboardButton(text='Добавить', callback_data=f'y-nt_{title}_{str(course)}_{str(max)}_{body}')
+    yes_nt = types.InlineKeyboardButton(text='Добавить', callback_data=f'newtaskblet,{task_id}')
+    bla = f'response,{task_id}'
     keyboard.add(no_nt, yes_nt)
     bot.send_message(message.chat.id, reply, reply_markup=keyboard)
 
@@ -253,7 +263,7 @@ def response(function_call):
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
         bot.answer_callback_query(function_call.id)
 
-     elif "WantIt" in function_call.data:
+     elif "UUID" in function_call.data:
         numtask = function_call.data.replace("WantIt", '')
         reply = "Вы точно хотите принять задание " + numtask + "?\nОтменить это действие будет невозможно!"
         markup = types.InlineKeyboardMarkup()
@@ -274,19 +284,24 @@ def response(function_call):
              result = "Готово!"
              bot.reply_to(function_call.message, result)
 
-     elif 'y-nt' in function_call.data:
-         _, title, course, max, body = function_call.data.split('_')
+     elif ('newtaskblet' in function_call.data):
+         task_id = function_call.data.replace("newtaskblet,", '')
+         title = tasks[task_id]['title']
+         course = tasks[task_id]['course']
+         maximum = tasks[task_id]['maximum']
+         body = tasks[task_id]['body']
+             #сюда надо передать переменные из функции
          chatid = function_call.message.chat.id
          isadmin = mydb.IsAdmin(chatid)
-         if (max.isdigit()) and (course.isdigit()):
-             max = int(max)
-             course = int(max)
+         if (maximum.isdigit()) and (course.isdigit()):
+             gmax = int(maximum)
+             gcourse = int(course)
              if (isadmin == True):
-                 mydb.NewTask(title, body, int(course), int(max))
+                 mydb.NewTask(title, body, int(gcourse), int(maximum))
                  reply = "Готово!"
              else:
                  reply = "У вас нет прав администратора."
-         bot.send_message(function_call.message.chat.id, reply)
+             bot.send_message(function_call.message.chat.id, reply)
  #def callback_worker(call, name=None, lastname=None, group=None, course=None, chatid=None):
      elif 'yes-reg' in function_call.data:
         _, name, lastname, group, course, chatid = function_call.data.split('_')
