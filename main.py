@@ -31,7 +31,8 @@ def help(message):
     reply += "/alltasks - Вывести все задания из бд\n"
     reply += "/newtask - Добавить задачу\n"
     reply += "/deletetask - Удалить задачи\n"
-    reply += "/addadmin - Удалить задачи\n"
+    reply += "/addadmin - Добавить администратора\n"
+    reply += "/mychatid - Получить свой chatid\n"
     markup = types.InlineKeyboardMarkup()
     button_registration = types.InlineKeyboardButton(text='Скрыть', callback_data='Hide')
     markup.add(button_registration)
