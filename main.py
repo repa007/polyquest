@@ -109,7 +109,7 @@ def delete_task_command_handler(message):
     chatid = message.chat.id
     isadmin = mydb.IsAdmin(chatid)
     if (isadmin == True):
-        bot.reply_to(message, "Введите номер задания, которое Вы хотите удалить. Чтобы увидеть список задач введите /AllTask")
+        bot.reply_to(message, "Введите номер задания, которое Вы хотите удалить. Чтобы увидеть список задач введите /alltask")
         bot.register_next_step_handler(message, delete_task_handler)
     else:
         bot.reply_to(message, "Для удаления заданий нужны права администратора!")
