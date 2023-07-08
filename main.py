@@ -17,26 +17,27 @@ from telebot import types
 #Commands
 @bot.message_handler(commands=['start'])
 def startBot(message):
-  reply = "Привет!\nЭто бот для выдачи задач. Вы можете открыть инструкцию командой /help\nДля начала следует пройти регистрацию с помощью команды /reg. Касается только студентов."
+  reply = "Привет!\nЭто бот для выдачи задач. Вы можете открыть инструкцию командой /help\nДля начала следует пройти регистрацию с помощью команды /reg. Касается только студентов. При повторной регистрации данные о взятых вами заданиях будут удалены."
   bot.send_message(message.chat.id, reply, parse_mode='html')
 
 @bot.message_handler(commands=['help'])
 def help(message):
     reply = 'Для начала пройдите регистрацию (Пожалуйста, укажите ваши реальные данные, чтоб потом не пришлось выяснять кто такой Taburetka(⌐■_■)).\n\n'
-    reply+= "<b>Доступные команды:</b>\n"
-    reply+= "/help - как эта штука работает\n"
-    reply+= "/reg - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
-    reply+= "/gettasks - Жми сюда чтобы глянуть какие задачи свободны и взять какие-нибудь себе\n"
-    reply+= "\nКогда возьмёте задание, свяжитесь с контактом указанным в описании задания и сообщите об этом\n"
-    reply+= "/mytasks - Жми сюда чтобы глянуть какие задачи ты уже взял\n"
-    reply+= "/getexcel - Выгружает базу данных бота табличкой\n"
-    reply+= "/start - Приветствие (вы его уже видели)\n"
+    reply += "<b>Доступные команды:</b>\n"
+    reply += "/help - как эта штука работает\n"
+    reply += "/reg - Зарегистрироваться (бот создаёт запись в таблице пользователей в своей базе данных и потом записывает за этим пользователем задачи.)\n"
+    reply += "/gettasks - Жми сюда чтобы глянуть какие задачи свободны и взять какие-нибудь себе.\n"
+    reply += "Когда возьмёте задание, свяжитесь с контактом указанным в описании задания и сообщите об этом\n"
+    reply += "/mytasks - Жми сюда чтобы глянуть какие задачи ты уже взял\n"
+    reply += "/getexcel - Выгружает базу данных бота табличкой excel\n"
+    reply += "/start - Приветствие (вы его уже видели)\n"
     reply += "\nДля админов:\n"
-    reply += "/alltasks - Вывести все задания из бд\n"
+    reply += "/alltasks - Вывести все задания из бд (доступно всем пользователям)\n"
     reply += "/newtask - Добавить задачу\n"
-    reply += "/deletetask - Удалить задачи\n"
-    reply += "/addadmin - Добавить администратора\n"
-    reply += "/mychatid - Получить свой chatid\n"
+    reply += "/deletetask - Удалить задачу по ID\n"
+    reply += "/deletestudent - Удалить студента по chatid\n"
+    reply += "/addadmin - Добавить администратора (нужно будет ввести chatid того, кому хотите выдать права)\n"
+    reply += "/mychatid - Получить свой chatid (доступно всем пользователям)\n"
     markup = types.InlineKeyboardMarkup()
     button_registration = types.InlineKeyboardButton(text='Скрыть', callback_data='Hide')
     markup.add(button_registration)
@@ -186,14 +187,11 @@ def get_name(message):
     bot.register_next_step_handler(message, get_lastname, name)
 def get_lastname(message, name):
     lastname = message.text
-    bot.send_message(message.from_user.id, 'Цифрами, пожалуйста. Укажите курс как целое число.')
-    bot.send_message(message.from_user.id, 'На каком ты курсе?')
+    bot.send_message(message.from_user.id, 'Укажите курс (не семестр) как целое число.')
     bot.register_next_step_handler(message, get_course, name, lastname)
 def get_course(message, name, lastname):
-    #Надо придумать как обработать ошибку, except и catch того рот ебали, не работает
     course = message.text  # проверяем, что введено корректно
-    bot.send_message(message.from_user.id, 'Цифрами, пожалуйста. Укажите номер группы как целое число.')
-    bot.send_message(message.from_user.id, 'Какая у тебя группа?')
+    bot.send_message(message.from_user.id, 'Введите номер группы.')
     bot.register_next_step_handler(message, get_group, name, lastname, course)
 
 def get_group(message, name, lastname, course):
@@ -228,6 +226,21 @@ def AddAdmin2(message):
     else:
         bot.send_message(message.from_user.id, str(e))
 
+@bot.message_handler(commands=['deletestudent'])
+def DeleteStudent1(message):
+    if (mydb.IsAdmin(message.chat.id)):
+        reply = "Введите chatid студента, которого хотите удалить из БД"
+        bot.send_message(message.from_user.id, reply)
+        bot.register_next_step_handler(message, DeleteStudent2)
+
+def DeleteStudent2(message):
+    chatid = message.text
+    e = mydb.DeleteStudentByChatid(chatid)
+    if (e == None):
+        reply = "Готово"
+        bot.send_message(message.from_user.id, reply)
+    else:
+        bot.send_message(message.from_user.id, str(e))
 
 @bot.message_handler()#tol'ko vnizu
 def info(message):
@@ -249,8 +262,9 @@ def response(function_call):
         title = data_list["title"]
         body = data_list["body"]
         left, e = mydb.NumberOfSeatsLeft(taskid)
+        course = data_list["course"]
         text = "<b>" + title + "</b>\n" + body
-        reply = "Выбрано задание: " + str(taskid) + text + "\n\n\n Свободных мест: " + str(left)
+        reply = "Выбрано задание: " + str(taskid) + text + "\n\n\n Свободных мест: " + str(left) + "\nДля курса: " + str(course)
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html')
         bot.answer_callback_query(function_call.id)
 
@@ -263,7 +277,7 @@ def response(function_call):
         body = data_list["body"]
         left, e = mydb.NumberOfSeatsLeft(taskid)
         text = "<b>" + title + "</b>\n" + body
-        reply = "Задание " + str(taskid) + ":" + text + "\n\n\n Свободных мест: " + str(left)
+        reply = "Задание " + str(taskid) + ": " + text + "\n\n\nСвободных мест: " + str(left)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Принять", callback_data="WantIt" + str(taskid)))
         bot.send_message(function_call.message.chat.id, reply,  parse_mode='html', reply_markup=markup)
@@ -311,8 +325,11 @@ def response(function_call):
  #def callback_worker(call, name=None, lastname=None, group=None, course=None, chatid=None):
      elif 'yes-reg' in function_call.data:
         _, name, lastname, group, course, chatid = function_call.data.split('_')
-        result = mydb.AddStudent(name, lastname, group, course, chatid)
-        bot.send_message(function_call.message.chat.id, 'Запомню : )')
+        e = mydb.AddStudent(name, lastname, group, course, chatid)
+        if (e == None):
+            bot.send_message(chatid, 'Запомню : )')
+        else:
+            bot.send_message(chatid, 'Не могу вас зерегестрировать, похоже вы уже зарегистрированы. Обратитесь к администратору (назовите ему свой chatid /mychatid), чтобы вашу запись удалили. После этого вы сможете зарегистрироваться заново.')
      elif 'no-reg' == function_call.data:# переспрашиваем
         bot.send_message(function_call.message.chat.id, 'Давай проведём регистрацию заново. Введи /reg')
 
